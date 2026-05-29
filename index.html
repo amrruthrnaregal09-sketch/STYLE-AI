@@ -1,0 +1,2179 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <script>
+    window.onerror = function(message, source, lineno, colno, error) {
+      var fallback = document.getElementById('error-fallback');
+      var msg = document.getElementById('error-message');
+      var stack = document.getElementById('error-stack');
+      if (fallback && msg) {
+        fallback.style.display = 'block';
+        msg.textContent = message + ' (Line ' + lineno + ', Col ' + colno + ')';
+        if (error && error.stack) {
+          stack.textContent = error.stack;
+        }
+      }
+      return false;
+    };
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StyleAI — Premium AI Fashion & Style Assistant</title>
+  <meta name="description" content="Futuristic AI-powered style analyzer and virtual try-on generator. Elevate your wardrobe with custom luxury styling.">
+  
+  <!-- Tailwind CSS CDN with custom glassmorphism theme -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            obsidian: '#0b0b0d',
+            coal: '#141417',
+            steel: '#222227',
+            gold: '#d4af37',
+            goldglow: 'rgba(212, 175, 55, 0.35)',
+            emerald: '#0fa47c',
+            velvet: '#8b5cf6',
+            champagne: '#f7f5f0'
+          },
+          fontFamily: {
+            editorial: ['Cinzel', 'serif'],
+            sans: ['Outfit', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  
+  <!-- Custom Global CSS -->
+  <link rel="stylesheet" href="styles.css">
+  
+  <!-- Core Libraries CDNs -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-obsidian text-champagne min-h-screen flex flex-col font-sans transition-colors duration-500">
+  <div id="root"></div>
+  <div id="error-fallback" style="display: none; background: #1a0808; border: 2px solid #ef4444; color: #fecaca; padding: 24px; font-family: monospace; max-width: 800px; margin: 60px auto; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <h3 style="margin-top: 0; color: #ef4444; font-size: 18px; border-bottom: 1px solid #7f1d1d; padding-bottom: 10px;">Atelier Diagnostic Report</h3>
+    <p id="error-message" style="font-weight: bold; font-size: 14px; margin-top: 15px;"></p>
+    <pre id="error-stack" style="white-space: pre-wrap; font-size: 11px; margin-top: 15px; color: #f87171; background: #000; padding: 15px; border-radius: 6px; overflow-x: auto; max-height: 400px;"></pre>
+    <p style="font-size: 11px; color: #fca5a5; margin-top: 15px;">Please take a screenshot of this diagnostic report and share it with the development agent so we can resolve the compilation mismatch instantly!</p>
+  </div>
+
+  <!-- React Code with Babel Compiler -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- REUSABLE HELPER COMPONENTS ---
+    
+    // Reusable Native React SVG Icon Component (Zero external DOM manipulation!)
+    const Icon = ({ name, className = "w-5 h-5", ...props }) => {
+      const iconDict = {
+        "sun": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+          </svg>
+        ),
+        "moon": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />
+          </svg>
+        ),
+        "message-square": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+          </svg>
+        ),
+        "camera": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+            <circle cx="12" cy="13" r="3" />
+          </svg>
+        ),
+        "sparkles": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+            <path d="m5 3 1 2.5L8.5 6 6 7 5 9.5 4 7 1.5 6 4 5.5z" opacity="0.6" />
+            <path d="m19 17 1 2.5 2.5.5-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1z" opacity="0.6" />
+          </svg>
+        ),
+        "eye": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
+        ),
+        "bookmark": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16z" />
+          </svg>
+        ),
+        "x": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M18 6 6 18M6 6l12 12" />
+          </svg>
+        ),
+        "cpu": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <path d="M9 9h6v6H9zm0-5v1M15-5v1M9 20v1M15 20v1M20 9h1M20 15h1M3 9h1M3 15h1" />
+          </svg>
+        ),
+        "volume-2": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14" />
+          </svg>
+        ),
+        "send": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="m22 2-7 20-4-9-9-4Z" />
+            <path d="M22 2 11 13" />
+          </svg>
+        ),
+        "trash-2": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6" />
+          </svg>
+        ),
+        "download": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" />
+          </svg>
+        ),
+        "share-2": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <circle cx="18" cy="5" r="3" />
+            <circle cx="6" cy="12" r="3" />
+            <circle cx="18" cy="19" r="3" />
+            <path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98" />
+          </svg>
+        ),
+        "upload-cloud": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242M12 12v9M9 15l3-3 3 3" />
+          </svg>
+        ),
+        "move-horizontal": (
+          <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+            <path d="m18 8 4 4-4 4M6 8l-4 4 4 4M2 12h20" />
+          </svg>
+        )
+      };
+
+      return iconDict[name] || (
+        <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+          <circle cx="12" cy="12" r="10" />
+        </svg>
+      );
+    };
+
+    // Circular Progress for Style Score
+    const CircularProgress = ({ value, size = 120, strokeWidth = 8 }) => {
+      const radius = (size - strokeWidth) / 2;
+      const circumference = radius * 2 * Math.PI;
+      const offset = circumference - (value / 100) * circumference;
+
+      return (
+        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+          <svg className="transform -rotate-90" width={size} height={size}>
+            {/* Background circle */}
+            <circle
+              className="text-stone-800 dark:text-stone-800/40"
+              strokeWidth={strokeWidth}
+              stroke="currentColor"
+              fill="transparent"
+              r={radius}
+              cx={size / 2}
+              cy={size / 2}
+            />
+            {/* Foreground circle with gold gradient */}
+            <circle
+              className="transition-all duration-1000 ease-out"
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
+              strokeLinecap="round"
+              stroke="url(#goldGradient)"
+              fill="transparent"
+              r={radius}
+              cx={size / 2}
+              cy={size / 2}
+            />
+            <defs>
+              <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f3e5ab" />
+                <stop offset="50%" stopColor="#d4af37" />
+                <stop offset="100%" stopColor="#aa8410" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div className="absolute text-center">
+            <span className="text-2xl font-bold font-editorial text-gold-gradient">{value}</span>
+            <span className="block text-[10px] tracking-wider uppercase text-stone-400">Score</span>
+          </div>
+        </div>
+      );
+    };
+
+    // Pre-made Models Library for Sandbox try-on
+    const MODEL_PRESETS = [
+      {
+        id: "male_classic",
+        name: "Julian (Classic Male)",
+        gender: "male",
+        image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&q=80&w=600",
+        faceShape: "Square",
+        skinTone: "Olive/Tan",
+        toneHex: "#b58e6d"
+      },
+      {
+        id: "female_chic",
+        name: "Amara (Elegant Female)",
+        gender: "female",
+        image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=600",
+        faceShape: "Oval",
+        skinTone: "Warm Honey",
+        toneHex: "#dfb186"
+      },
+      {
+        id: "male_casual",
+        name: "Kenzo (Modern Male)",
+        gender: "male",
+        image: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=600",
+        faceShape: "Oval",
+        skinTone: "Deep Espresso",
+        toneHex: "#472c1c"
+      },
+      {
+        id: "female_street",
+        name: "Chloe (Vibrant Female)",
+        gender: "female",
+        image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600",
+        faceShape: "Heart",
+        skinTone: "Porcelain/Fair",
+        toneHex: "#f7d6c8"
+      }
+    ];
+
+    // Outfits Data Library
+    const OUTFIT_RECOMMENDATIONS = {
+      casual: [
+        {
+          id: "cas_1",
+          name: "Monochrome Minimalist",
+          description: "Clean silhouettes and high contrast, perfect for art galleries or designer coffee shop workdays.",
+          style: "Minimalist Luxury",
+          rating: "4.9",
+          price: "$690",
+          colors: ["#0b0b0d", "#55555e", "#ffffff"],
+          items: {
+            top: "Premium Silk-Cotton Blend Tee (Black) - $120",
+            bottom: "Tailored Cropped Wool Trousers (Charcoal) - $280",
+            shoes: "Handcrafted Minimalist Leather Sneakers (White) - $220",
+            accessory: "Obsidian Chronograph Watch (Gold Accent) - $70"
+          },
+          hair: "Modern Textured Fringe"
+        },
+        {
+          id: "cas_2",
+          name: "Suede Savoir-Faire",
+          description: "Soft earth tones combined with luxurious textures for an effortless upscale casual weekend.",
+          style: "Earth Tone Classic",
+          rating: "4.8",
+          price: "$1,150",
+          colors: ["#d2b48c", "#556b2f", "#8b5a2b"],
+          items: {
+            top: "Mongolian Cashmere Knit Sweater (Sand) - $340",
+            bottom: "Italian Pleated Chinos (Sage Green) - $290",
+            shoes: "Hand-stitched Suede Penny Loafers (Taupe) - $410",
+            accessory: "Rose Gold Dress Slim Watch - $110"
+          },
+          hair: "Sleek Side Part"
+        }
+      ],
+      formal: [
+        {
+          id: "form_1",
+          name: "Savile Row Sovereign",
+          description: "Sharp tailoring, structured shoulders, and majestic navy tones for high-level boardroom pitches.",
+          style: "Bespoke Royal",
+          rating: "5.0",
+          price: "$2,450",
+          colors: ["#0f172a", "#ffffff", "#4b5320"],
+          items: {
+            top: "Double-Breasted Wool-Silk Blazer & Waistcoat (Navy) - $1,250",
+            bottom: "Savile Row Flat-Front Trousers (Navy) - $650",
+            shoes: "Full-Grain Leather Oxford Cap-toes (Oxblood) - $450",
+            accessory: "18k Gold Pocket Watch & Silk Tie - $100"
+          },
+          hair: "Classic Slick Back"
+        },
+        {
+          id: "form_2",
+          name: "Midnight Obsidian Tuxedo",
+          description: "Gleaming silk lapels paired with obsidian tailoring. The pinnacle of red-carpet sophistication.",
+          style: "Avant-Garde Formal",
+          rating: "4.9",
+          price: "$3,100",
+          colors: ["#0b0b0d", "#1e1b4b", "#ffffff"],
+          items: {
+            top: "Silk-Lapel Tuxedo Blazer & Pleated Bib Shirt - $1,700",
+            bottom: "Slim Tuxedo Trousers with Satin Side Stripe - $750",
+            shoes: "Patent Leather Slippers (Midnight Black) - $480",
+            accessory: "Platinum Diamond-Dial Dress Watch & Velvet Bowtie - $170"
+          },
+          hair: "Clean Buzzcut or High Bun"
+        }
+      ],
+      streetwear: [
+        {
+          id: "street_1",
+          name: "Neo-Tokyo Cyberpunk",
+          description: "Striking technical gear with high versatility and active techwear detailing.",
+          style: "Urban Techwear",
+          rating: "4.7",
+          price: "$850",
+          colors: ["#141417", "#0fa47c", "#ffffff"],
+          items: {
+            top: "Oversized Technical Multi-Pocket Hoodie (Obsidian) - $290",
+            bottom: "Cargo Utility Joggers with Magnetic Straps (Carbon) - $280",
+            shoes: "High-Top Techwear Sneakers (Volt Accents) - $210",
+            accessory: "Matte Black Smart Ring & Tactical Pack - $70"
+          },
+          hair: "Undercut with Frosted Tips"
+        },
+        {
+          id: "street_2",
+          name: "Heritage Bomber Revival",
+          description: "Retro athletic proportions merged with Italian burgundy leather craftsmanship.",
+          style: "Retro Hypebeast",
+          rating: "4.8",
+          price: "$1,890",
+          colors: ["#58111a", "#cbd5e1", "#ffffff"],
+          items: {
+            top: "Napa Leather Aviator Bomber (Deep Burgundy) - $1,100",
+            bottom: "Distressed Selvedge Denim (Light Wash) - $380",
+            shoes: "Vintage Court Sneakers (Gold & Off-White) - $310",
+            accessory: "Heavy Link Silver Chain Necklace - $100"
+          },
+          hair: "Messy Quiff or Curly Shag"
+        }
+      ],
+      traditional: [
+        {
+          id: "trad_1",
+          name: "Modern Maharaja Sherwani",
+          description: "A spectacular celebration of South Asian artistry, updated with modern geometric embroidery.",
+          style: "Imperial Traditional",
+          rating: "5.0",
+          price: "$2,200",
+          colors: ["#064e3b", "#f3e5ab", "#ffffff"],
+          items: {
+            top: "Gold-Embroidered Raw Silk Sherwani (Emerald Green) - $1,400",
+            bottom: "Tailored Premium Silk Churidar (Ivory) - $400",
+            shoes: "Embellished Velvet Mojari Slippers (Emerald) - $300",
+            accessory: "Gold Signet Ring & Pearl Collar Brooch - $100"
+          },
+          hair: "Royal Slick Back"
+        },
+        {
+          id: "trad_2",
+          name: "Sartorial Kimono Ensemble",
+          description: "Pleated structured fabrics inspired by Japanese silhouettes, delivering calm asymmetry.",
+          style: "Zen Modernism",
+          rating: "4.9",
+          price: "$1,650",
+          colors: ["#262626", "#172554", "#e5e5e5"],
+          items: {
+            top: "Structured Silk Wrap Kimono-Jacket (Charcoal) - $750",
+            bottom: "Pleated Cropped Hakama Trousers (Navy) - $500",
+            shoes: "Premium Leather Geta-Sandals (Black) - $300",
+            accessory: "Sleek Handcrafted Bamboo-Frame Watch - $100"
+          },
+          hair: "Neat Low Bun or Taper Fade"
+        }
+      ]
+    };
+
+    // Chatbot Style Q&A Database
+    const CHATBOT_RESPONSES = [
+      { key: "casual", text: "For an elevated casual look, I recommend pairing a premium silk-cotton blend tee under a relaxed linen blazer, matched with tailored cropped wool trousers. Finish it off with hand-stitched minimal sneakers to maintain that high-end elegance." },
+      { key: "formal", text: "If you're attending a formal dinner, the Midnight Obsidian Tuxedo with flat-front trousers and patent slippers will command the room. Ensure the cuffs show exactly a quarter-inch of your white shirt." },
+      { key: "skin tone", text: "Your skin tone pairs exceptionally well with rich jewel tones (like Emerald green, Sapphire navy) and warm earth tones (like Cashmere sand, terracotta). Avoid overly saturated primary colors to let your natural skin tone shine." },
+      { key: "face shape", text: "Since you have an elegant facial structure, a textured undercut or a sleek side part will accentuate your jawline. For eyewear, hexagonal frames will introduce beautiful structure." },
+      { key: "trend", text: "Currently, we're seeing a huge resurgence in 'Quiet Luxury'—structured silhouettes in high-end monochrome fabrics, coupled with subtle metallic micro-accessories like heavy silver chains and thin gold watch bands." },
+      { key: "try-on", text: "To try on styles, click 'Virtual Try-On' in the navbar! You can overlay different hairstyles, designer sunglasses, and winter coats, and drag the before/after slider to see the premium transformation." }
+    ];
+
+    // --- MAIN APP COMPONENT ---
+    function App() {
+      const [page, setPage] = useState("landing");
+      const [theme, setTheme] = useState("dark");
+      const [user, setUser] = useState({
+        name: "Alexander",
+        email: "alexander@styleai.com",
+        profilePic: null,
+        styleScore: 82,
+        personality: "Sartorial Minimalist",
+        palette: ["#141417", "#D4AF37", "#556B2F"],
+        history: ["cas_1", "form_1"]
+      });
+      const [uploadedImage, setUploadedImage] = useState(null);
+      const [uploadedFile, setUploadedFile] = useState(null);
+      const [analysisResult, setAnalysisResult] = useState(null);
+      const [scanning, setScanning] = useState(false);
+      const [savedOutfits, setSavedOutfits] = useState([]);
+      const [chatbotOpen, setChatbotOpen] = useState(false);
+      const [chatMessages, setChatMessages] = useState([
+        { sender: "ai", text: "Welcome to StyleAI. I am Aria, your personal AI fashion curator. Let me analyze your style, suggest premium outfits, or guide you through a virtual try-on." }
+      ]);
+      const [voiceOn, setVoiceOn] = useState(false);
+      const [stylePref, setStylePref] = useState("unisex");
+      const [luxuryFilter, setLuxuryFilter] = useState("luxury"); // budget vs luxury
+      const [tryOnConfig, setTryOnConfig] = useState({
+        modelId: "female_chic",
+        hair: "none",
+        glass: "none",
+        jacket: "none",
+        sliderPosition: 50
+      });
+      const [cameraMode, setCameraMode] = useState(false);
+      const [cameraPresetModel, setCameraPresetModel] = useState("male_classic");
+      const [shutterFlash, setShutterFlash] = useState(false);
+
+      const videoRef = useRef(null);
+      const [webcamStream, setWebcamStream] = useState(null);
+      const [webcamActive, setWebcamActive] = useState(false);
+      const [webcamError, setWebcamError] = useState(null);
+
+      // Initialize the webcam media device
+      const startWebcam = async () => {
+        setCameraMode(true);
+        setWebcamActive(false);
+        setWebcamError(null);
+        addChatMessage("ai", "Initializing camera hardware...");
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" }
+          });
+          setWebcamStream(stream);
+          setWebcamActive(true);
+          addChatMessage("ai", "Webcam connected successfully! Frame your face in the mirrored viewfinder, then capture.");
+        } catch (err) {
+          console.warn("Webcam access failed, falling back to simulated target profile:", err);
+          setWebcamError("No camera hardware detected or access denied. Simulator mode enabled.");
+          addChatMessage("ai", "No camera detected or access was denied. Running in simulator mode with target profiles.");
+        }
+      };
+
+      // Turn off active camera tracks and clean up
+      const stopWebcam = () => {
+        if (webcamStream) {
+          webcamStream.getTracks().forEach(track => track.stop());
+          setWebcamStream(null);
+        }
+        setWebcamActive(false);
+        setCameraMode(false);
+      };
+
+      // Clean up webcam stream on unmount or page change
+      useEffect(() => {
+        return () => {
+          if (webcamStream) {
+            webcamStream.getTracks().forEach(track => track.stop());
+          }
+        };
+      }, [webcamStream]);
+
+      useEffect(() => {
+        if (page !== "upload" && webcamStream) {
+          webcamStream.getTracks().forEach(track => track.stop());
+          setWebcamStream(null);
+          setWebcamActive(false);
+        }
+      }, [page, webcamStream]);
+
+      // Connect webcam stream to video element when active
+      useEffect(() => {
+        if (webcamActive && webcamStream && videoRef.current) {
+          videoRef.current.srcObject = webcamStream;
+        }
+      }, [webcamActive, webcamStream]);
+
+
+      // Load saved styles from LocalStorage
+      useEffect(() => {
+        const saved = localStorage.getItem("styleai_saved");
+        if (saved) {
+          try {
+            setSavedOutfits(JSON.parse(saved));
+          } catch (e) {
+            console.error("Error reading saved styles", e);
+          }
+        }
+      }, []);
+
+      // Toggle Dark/Light Theme
+      useEffect(() => {
+        const html = document.documentElement;
+        if (theme === "dark") {
+          html.classList.add("dark");
+        } else {
+          html.classList.remove("dark");
+        }
+      }, [theme]);
+
+      const saveOutfit = (outfit) => {
+        if (savedOutfits.some(o => o.id === outfit.id)) return;
+        const updated = [...savedOutfits, outfit];
+        setSavedOutfits(updated);
+        localStorage.setItem("styleai_saved", JSON.stringify(updated));
+        
+        // Add message in chat
+        addChatMessage("user", `Saved outfit "${outfit.name}"`);
+        addChatMessage("ai", `Excellent choice. "${outfit.name}" has been added to your collection. You can download its Style Card in the Saved Styles page.`);
+      };
+
+      const removeOutfit = (id) => {
+        const updated = savedOutfits.filter(o => o.id !== id);
+        setSavedOutfits(updated);
+        localStorage.setItem("styleai_saved", JSON.stringify(updated));
+      };
+
+      const addChatMessage = (sender, text) => {
+        setChatMessages(prev => [...prev, { sender, text }]);
+      };
+
+      // Browser Speech Synthesis
+      const speakText = (text) => {
+        if (!voiceOn) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        // Try to find a premium English voice
+        const voices = window.speechSynthesis.getVoices();
+        const premiumVoice = voices.find(v => v.lang.includes("en") && v.name.toLowerCase().includes("google") || v.name.toLowerCase().includes("natural"));
+        if (premiumVoice) {
+          utterance.voice = premiumVoice;
+        }
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+      };
+
+      // Trigger bot speech whenever AI sends a message
+      useEffect(() => {
+        const lastMsg = chatMessages[chatMessages.length - 1];
+        if (lastMsg && lastMsg.sender === "ai" && voiceOn) {
+          speakText(lastMsg.text);
+        }
+      }, [chatMessages, voiceOn]);
+
+      // Chat input submit logic
+      const handleChatSubmit = (text) => {
+        if (!text.trim()) return;
+        addChatMessage("user", text);
+        
+        setTimeout(() => {
+          const lower = text.toLowerCase();
+          let response = "I appreciate your styling query. To give you the best bespoke recommendation, make sure to upload your style photo or head into the AI Analyzer.";
+          
+          for (let item of CHATBOT_RESPONSES) {
+            if (lower.includes(item.key)) {
+              response = item.text;
+              break;
+            }
+          }
+          
+          addChatMessage("ai", response);
+        }, 800);
+      };
+
+      // Perform Canvas Color Sampling (REAL feature!)
+      const handleImageScan = (fileUrl, imgElement) => {
+        setScanning(true);
+        
+        setTimeout(() => {
+          try {
+            // 1. Check if the URL matches any of our preset models to avoid cross-origin taint
+            const matchedPreset = MODEL_PRESETS.find(m => fileUrl && (m.image === fileUrl || fileUrl.includes(m.id)));
+            
+            let faceShape = ["Oval", "Square", "Round", "Heart"][Math.floor(Math.random() * 4)];
+            let skinTone = "Warm Honey";
+            let toneHex = "#dfb186";
+            let bodyStructure = ["Athletic/Mesomorph", "Lean/Ectomorph", "Structured/Endomorph"][Math.floor(Math.random() * 3)];
+            let fashionStyle = stylePref === "male" ? "Bespoke Contemporary" : "Minimalist Chic";
+            
+            if (matchedPreset) {
+              faceShape = matchedPreset.faceShape;
+              skinTone = matchedPreset.skinTone;
+              toneHex = matchedPreset.toneHex;
+              bodyStructure = "Athletic/Mesomorph";
+            } else if (imgElement && imgElement.naturalWidth > 0) {
+              // Draw image on canvas to extract skin tone pixel color safely
+              const canvas = document.createElement("canvas");
+              const ctx = canvas.getContext("2d");
+              canvas.width = 150; // Keep canvas small for fast sampling
+              canvas.height = 150;
+              
+              ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+              
+              // Sample center point where face is most likely to be
+              const sampleX = Math.floor(canvas.width * 0.5);
+              const sampleY = Math.floor(canvas.height * 0.45);
+              const pixel = ctx.getImageData(sampleX, sampleY, 1, 1).data;
+              
+              const r = pixel[0];
+              const g = pixel[1];
+              const b = pixel[2];
+              
+              // Convert to hex
+              const rgbToHex = (r, g, b) => "#" + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? "0" + hex : hex;
+              }).join("");
+              
+              toneHex = rgbToHex(r, g, b);
+              
+              // Determine skin tone classification
+              const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+              if (brightness > 210) skinTone = "Porcelain/Fair";
+              else if (brightness > 180) skinTone = "Warm Ivory";
+              else if (brightness > 140) skinTone = "Warm Honey";
+              else if (brightness > 100) skinTone = "Olive/Tan";
+              else if (brightness > 60) skinTone = "Rich Bronze";
+              else skinTone = "Deep Espresso";
+            }
+            
+            // Set dynamic analysis results
+            const results = {
+              faceShape,
+              skinTone,
+              hairStyle: stylePref === "male" ? "Textured Quiff" : "Long Elegant Waves",
+              bodyStructure,
+              fashionStyle,
+              toneHex
+            };
+            
+            setAnalysisResult(results);
+            
+            // Update user profile colors & personality
+            setUser(prev => ({
+              ...prev,
+              personality: results.fashionStyle,
+              palette: [toneHex, "#D4AF37", "#0B0B0D"]
+            }));
+            
+            // Auto lock the try-on to the uploaded portrait
+            setTryOnConfig(prev => ({
+              ...prev,
+              modelId: matchedPreset ? matchedPreset.id : "custom_upload"
+            }));
+            
+            addChatMessage("ai", `AI Image Scan Complete. I have computed your parameters: Face Shape is ${results.faceShape}, Skin Tone is ${results.skinTone} (True Sample: ${toneHex}), and Body Structure is ${results.bodyStructure}. I have updated your style score to 91 and customized your outfit catalog.`);
+          } catch (error) {
+            console.error("Canvas sampling error, applying fallback", error);
+            // Fallback if canvas cross-origin blocks drawing
+            const results = {
+              faceShape: ["Oval", "Square", "Round", "Heart"][Math.floor(Math.random() * 4)],
+              skinTone: "Warm Honey",
+              hairStyle: stylePref === "male" ? "Textured Quiff" : "Long Elegant Waves",
+              bodyStructure: ["Athletic/Mesomorph", "Lean/Ectomorph", "Structured/Endomorph"][Math.floor(Math.random() * 3)],
+              fashionStyle: stylePref === "male" ? "Bespoke Contemporary" : "Minimalist Chic",
+              toneHex: "#dfb186"
+            };
+            setAnalysisResult(results);
+            
+            setUser(prev => ({
+              ...prev,
+              personality: results.fashionStyle,
+              palette: ["#dfb186", "#D4AF37", "#0B0B0D"]
+            }));
+            
+            setTryOnConfig(prev => ({
+              ...prev,
+              modelId: "custom_upload"
+            }));
+            
+            addChatMessage("ai", `AI Image Scan Complete. Silhouette computed successfully! Face Shape is ${results.faceShape}, Skin Tone is ${results.skinTone}, and Body Structure is ${results.bodyStructure}. Custom capsules loaded.`);
+          } finally {
+            setScanning(false);
+            setPage("dashboard");
+          }
+        }, 1500); // Shorter loading duration for better UX
+      };
+
+      return (
+        <div className="flex flex-col min-h-screen">
+          
+          {/* HEADER NAV */}
+          <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-obsidian/75 backdrop-blur-md">
+            <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+              
+              {/* Brand Logo */}
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => setPage("landing")}>
+                <span className="font-editorial text-2xl font-black tracking-widest bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 bg-clip-text text-transparent">
+                  STYLEAI
+                </span>
+                <span className="text-[10px] uppercase tracking-widest text-gold border border-gold/30 px-1.5 py-0.5 rounded">
+                  ATELIER
+                </span>
+              </div>
+              
+              {/* Navigation Items */}
+              <nav className="hidden md:flex items-center gap-8 text-sm font-medium tracking-widest uppercase">
+                <button 
+                  onClick={() => setPage("landing")} 
+                  className={`transition ${page === "landing" ? "text-gold font-bold" : "text-stone-400 hover:text-white"}`}
+                >
+                  Home
+                </button>
+                {user && (
+                  <>
+                    <button 
+                      onClick={() => setPage("dashboard")} 
+                      className={`transition ${page === "dashboard" ? "text-gold font-bold" : "text-stone-400 hover:text-white"}`}
+                    >
+                      Dashboard
+                    </button>
+                    <button 
+                      onClick={() => setPage("upload")} 
+                      className={`transition ${page === "upload" ? "text-gold font-bold" : "text-stone-400 hover:text-white"}`}
+                    >
+                      AI Scan
+                    </button>
+                    <button 
+                      onClick={() => setPage("recommendations")} 
+                      className={`transition ${page === "recommendations" ? "text-gold font-bold" : "text-stone-400 hover:text-white"}`}
+                    >
+                      Outfits
+                    </button>
+                    <button 
+                      onClick={() => setPage("tryon")} 
+                      className={`transition ${page === "tryon" ? "text-gold font-bold" : "text-stone-400 hover:text-white"}`}
+                    >
+                      Try-On
+                    </button>
+                    <button 
+                      onClick={() => setPage("saved")} 
+                      className={`transition ${page === "saved" ? "text-gold font-bold" : "text-stone-400 hover:text-white"}`}
+                    >
+                      Favorites
+                    </button>
+                  </>
+                )}
+              </nav>
+
+              {/* Utility Panel */}
+              <div className="flex items-center gap-4">
+                {/* Theme Selector */}
+                <button 
+                  onClick={() => setTheme(theme === "dark" ? "light" : "dark")} 
+                  className="p-2.5 rounded-full btn-glass"
+                  title="Toggle Visual Mode"
+                >
+                  <Icon name={theme === "dark" ? "sun" : "moon"} className="w-4 h-4 text-gold" />
+                </button>
+
+                {/* Chatbot Toggle Button */}
+                <button 
+                  onClick={() => setChatbotOpen(!chatbotOpen)} 
+                  className="p-2.5 rounded-full btn-gold text-black flex items-center gap-2"
+                  title="Aria Assistant"
+                >
+                  <Icon name="message-square" className="w-4 h-4" />
+                  <span className="hidden sm:inline text-xs uppercase tracking-widest font-semibold">Consult</span>
+                </button>
+
+                {/* Profile Avatar / Logged state */}
+                {user ? (
+                  <button 
+                    onClick={() => setPage("settings")} 
+                    className="flex items-center gap-2 border border-white/10 rounded-full pl-2 pr-4 py-1.5 hover:border-gold/30 transition bg-stone-900/60"
+                  >
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-tr from-gold to-amber-200 text-black flex items-center justify-center font-bold text-xs">
+                      {user.name[0]}
+                    </div>
+                    <span className="text-xs font-semibold tracking-wider hidden lg:inline">{user.name}</span>
+                  </button>
+                ) : (
+                  <button onClick={() => setPage("auth")} className="btn-gold px-5 py-2.5 text-xs uppercase rounded">
+                    Sign In
+                  </button>
+                )}
+              </div>
+            </div>
+          </header>
+
+          {/* MAIN PAGE WRAPPER */}
+          <main className="flex-grow">
+            
+            {/* 1. LANDING PAGE */}
+            {page === "landing" && (
+              <div className="relative">
+                {/* Background video overlay or rich gold mesh */}
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(212,175,55,0.08),transparent_40%)] pointer-events-none" />
+                
+                {/* HERO HERO SECTION */}
+                <section className="max-w-7xl mx-auto px-6 pt-16 pb-24 text-center md:pt-28 md:pb-36">
+                  <span className="text-xs uppercase tracking-[0.3em] text-gold font-semibold mb-4 inline-block">
+                    The Ultimate AI Haute Couture
+                  </span>
+                  <h1 className="font-editorial text-5xl md:text-8xl font-black mb-8 leading-none tracking-tight">
+                    YOUR PERSONAL <br/>
+                    <span className="text-gold-gradient font-black">AI STYLE ATELIER</span>
+                  </h1>
+                  <p className="max-w-2xl mx-auto text-stone-400 text-base md:text-lg mb-12 font-light leading-relaxed">
+                    Upload your portrait. Let our neural engine analyze your skin tone, face geometry, and posture to generate exquisite magazine-grade outfit matching and interactive virtual try-ons.
+                  </p>
+                  
+                  <div className="flex flex-col sm:flex-row justify-center gap-6">
+                    <button 
+                      onClick={() => {
+                        if (user) setPage("upload");
+                        else setPage("auth");
+                      }} 
+                      className="btn-gold px-8 py-4 text-sm uppercase rounded tracking-widest font-bold"
+                    >
+                      Analyze My Silhouette
+                    </button>
+                    <button 
+                      onClick={() => setPage("tryon")} 
+                      className="btn-glass px-8 py-4 text-sm uppercase rounded tracking-widest font-bold"
+                    >
+                      Enter Virtual Dressing Room
+                    </button>
+                  </div>
+
+                  {/* Stunning Glass Card Showcase */}
+                  <div className="mt-20 max-w-5xl mx-auto glass-panel p-2 rounded-2xl border border-white/5 relative shadow-2xl float-animation">
+                    <img 
+                      src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=1200" 
+                      className="w-full h-[320px] md:h-[480px] object-cover rounded-xl filter brightness-[0.7] contrast-[1.05]" 
+                      alt="Luxury Couture Banner"
+                    />
+                    <div className="absolute bottom-10 left-10 text-left bg-black/60 backdrop-blur-md p-6 rounded-xl border border-white/10 max-w-sm">
+                      <span className="text-[10px] uppercase text-gold font-bold tracking-widest">Trending Now</span>
+                      <h3 className="font-editorial text-xl font-bold text-white mt-1">Sartorial Earth Tones</h3>
+                      <p className="text-xs text-stone-300 mt-2">Discover how olive greens, raw sand canvas, and cashmere sweaters pair perfectly for mid-season elegance.</p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* EDITORIAL FEATURES */}
+                <section className="bg-coal/45 py-24 border-y border-white/5">
+                  <div className="max-w-7xl mx-auto px-6">
+                    <div className="text-center mb-16">
+                      <span className="text-xs uppercase text-gold font-bold tracking-widest">Advanced Silhouette Engine</span>
+                      <h2 className="font-editorial text-3xl md:text-5xl mt-2 font-bold">THE HAUTE COUTURE PIPELINE</h2>
+                    </div>
+
+                    <div className="grid md:grid-cols-3 gap-8">
+                      <div className="glass-panel p-8 rounded-xl relative hover:border-gold/30">
+                        <div className="w-12 h-12 rounded-lg bg-gold/10 text-gold flex items-center justify-center mb-6">
+                          <Icon name="camera" className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-editorial text-lg font-bold mb-3 text-white">1. Silhouetted Scan</h3>
+                        <p className="text-stone-400 text-sm leading-relaxed">Drop your photo into our analyzer. Canvas-level algorithms process true skin shades, facial contours, and overall body structure.</p>
+                      </div>
+
+                      <div className="glass-panel p-8 rounded-xl relative hover:border-gold/30">
+                        <div className="w-12 h-12 rounded-lg bg-gold/10 text-gold flex items-center justify-center mb-6">
+                          <Icon name="sparkles" className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-editorial text-lg font-bold mb-3 text-white">2. Generative Atelier</h3>
+                        <p className="text-stone-400 text-sm leading-relaxed">Our AI compiles bespoke capsules matching your traits across Casual, Savile Row Formal, traditional outfits, and hype Streetwear.</p>
+                      </div>
+
+                      <div className="glass-panel p-8 rounded-xl relative hover:border-gold/30">
+                        <div className="w-12 h-12 rounded-lg bg-gold/10 text-gold flex items-center justify-center mb-6">
+                          <Icon name="eye" className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-editorial text-lg font-bold mb-3 text-white">3. Virtual Try-On</h3>
+                        <p className="text-stone-400 text-sm leading-relaxed">Interact with an premium before/after slider overlaying designer sunglasses, haircuts, and winter layers directly onto your photo.</p>
+                      </div>
+                    </div>
+                  </div>
+                </section>
+              </div>
+            )}
+
+            {/* 2. AUTHENTICATION PAGE */}
+            {page === "auth" && (
+              <div className="max-w-md mx-auto px-6 py-20">
+                <div className="glass-panel p-10 rounded-2xl border border-white/10 text-center relative">
+                  <span className="font-editorial text-2xl tracking-widest text-gold-gradient font-black">STYLEAI</span>
+                  <h2 className="font-editorial text-xl font-bold mt-4 text-white">WELCOME TO THE ATELIER</h2>
+                  <p className="text-xs text-stone-400 mt-1 mb-8">Access personalized fashion matching and try-on history.</p>
+                  
+                  {/* Google Authenticator Simulate */}
+                  <button 
+                    onClick={() => {
+                      setUser({
+                        name: "Alexander",
+                        email: "alexander@styleai.com",
+                        profilePic: null,
+                        styleScore: 82,
+                        personality: "Sartorial Minimalist",
+                        palette: ["#141417", "#D4AF37", "#556B2F"],
+                        history: ["cas_1", "form_1"]
+                      });
+                      setPage("dashboard");
+                      addChatMessage("ai", "Hello Alexander! Welcome back to your digital style atelier. I have loaded your saved wardrobes and computed your current Style Score.");
+                    }} 
+                    className="w-full py-3.5 px-4 bg-white text-black font-semibold text-xs uppercase tracking-widest rounded-lg flex items-center justify-center gap-3 hover:bg-stone-200 transition duration-300 mb-6 shadow-md"
+                  >
+                    <svg className="w-4 h-4" viewBox="0 0 24 24">
+                      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    Continue with Google
+                  </button>
+
+                  <div className="flex items-center my-6">
+                    <div className="flex-grow border-t border-white/5"></div>
+                    <span className="text-[10px] uppercase text-stone-500 px-3 tracking-widest">Or Secure Login</span>
+                    <div className="flex-grow border-t border-white/5"></div>
+                  </div>
+
+                  <form onSubmit={(e) => {
+                    e.preventDefault();
+                    setUser({
+                      name: "Alexander",
+                      email: "alexander@styleai.com",
+                      profilePic: null,
+                      styleScore: 82,
+                      personality: "Sartorial Minimalist",
+                      palette: ["#141417", "#D4AF37", "#556B2F"],
+                      history: ["cas_1", "form_1"]
+                    });
+                    setPage("dashboard");
+                  }} className="space-y-4 text-left">
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-stone-400 mb-1">Email Address</label>
+                      <input 
+                        type="email" 
+                        required 
+                        placeholder="alexander@couture.com" 
+                        className="w-full bg-stone-900 border border-white/5 rounded-lg px-4 py-3 text-xs text-white focus:border-gold/40 focus:outline-none transition"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] uppercase tracking-widest text-stone-400 mb-1">Secret Key</label>
+                      <input 
+                        type="password" 
+                        required 
+                        placeholder="••••••••••••" 
+                        className="w-full bg-stone-900 border border-white/5 rounded-lg px-4 py-3 text-xs text-white focus:border-gold/40 focus:outline-none transition"
+                      />
+                    </div>
+                    <button type="submit" className="w-full py-3.5 btn-gold text-xs uppercase tracking-widest rounded-lg">
+                      Enter Atelier
+                    </button>
+                  </form>
+                </div>
+              </div>
+            )}
+
+            {/* 3. STYLE DASHBOARD */}
+            {page === "dashboard" && user && (
+              <div className="max-w-7xl mx-auto px-6 py-12">
+                
+                {/* Welcome Block */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12 glass-panel p-8 rounded-2xl relative border-l-4 border-l-gold">
+                  <div>
+                    <span className="text-[10px] uppercase tracking-[0.2em] text-gold font-bold">Active Silhouette Dashboard</span>
+                    <h2 className="font-editorial text-3xl font-bold mt-1">BIENVENUE, {user.name.toUpperCase()}</h2>
+                    <p className="text-sm text-stone-400 mt-1">Your styling profile has been optimized based on your latest silhouette parameters.</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <button onClick={() => setPage("upload")} className="btn-gold px-5 py-3 text-xs uppercase tracking-widest rounded">
+                      Scan New Silhouette
+                    </button>
+                    <button onClick={() => setPage("tryon")} className="btn-glass px-5 py-3 text-xs uppercase tracking-widest rounded">
+                      Try-On Suite
+                    </button>
+                  </div>
+                </div>
+
+                {/* Dashboard grid */}
+                <div className="grid lg:grid-cols-3 gap-8 mb-12">
+                  
+                  {/* Style score / Personality card */}
+                  <div className="glass-panel p-8 rounded-2xl flex flex-col justify-between items-center text-center">
+                    <h3 className="font-editorial text-base text-stone-300 mb-6 uppercase tracking-widest">Atelier Rating</h3>
+                    <CircularProgress value={analysisResult ? 91 : user.styleScore} />
+                    <div className="mt-6">
+                      <span className="text-xs uppercase tracking-wider text-stone-400">Fashion Personality</span>
+                      <h4 className="font-editorial text-lg font-bold text-gold mt-1">
+                        {analysisResult ? analysisResult.fashionStyle : user.personality}
+                      </h4>
+                    </div>
+                  </div>
+
+                  {/* Computed Physical Parameters */}
+                  <div className="glass-panel p-8 rounded-2xl flex flex-col justify-between">
+                    <h3 className="font-editorial text-base text-stone-300 mb-6 uppercase tracking-widest">Silhouette Traits</h3>
+                    
+                    <div className="space-y-4 flex-grow flex flex-col justify-center">
+                      <div className="flex justify-between items-center pb-2.5 border-b border-white/5">
+                        <span className="text-xs text-stone-400 uppercase tracking-widest">Computed Skin Tone</span>
+                        <div className="flex items-center gap-2">
+                          <span 
+                            className="w-3.5 h-3.5 rounded-full border border-white/20" 
+                            style={{ backgroundColor: analysisResult ? analysisResult.toneHex : "#b58e6d" }}
+                          />
+                          <span className="text-xs font-semibold text-white">
+                            {analysisResult ? analysisResult.skinTone : "Warm Honey"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex justify-between items-center pb-2.5 border-b border-white/5">
+                        <span className="text-xs text-stone-400 uppercase tracking-widest">Face Geometry</span>
+                        <span className="text-xs font-semibold text-white">
+                          {analysisResult ? analysisResult.faceShape : "Square"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center pb-2.5 border-b border-white/5">
+                        <span className="text-xs text-stone-400 uppercase tracking-widest">Body Structure</span>
+                        <span className="text-xs font-semibold text-white">
+                          {analysisResult ? analysisResult.bodyStructure : "Athletic/Mesomorph"}
+                        </span>
+                      </div>
+
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-stone-400 uppercase tracking-widest">Primary Style Vector</span>
+                        <span className="text-xs font-semibold text-gold">
+                          {analysisResult ? analysisResult.fashionStyle : "Contemporary Luxury"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Active Palette & Brand Recommendations */}
+                  <div className="glass-panel p-8 rounded-2xl flex flex-col justify-between">
+                    <div>
+                      <h3 className="font-editorial text-base text-stone-300 mb-4 uppercase tracking-widest">Palette & Brands</h3>
+                      <div className="flex gap-3 mb-6">
+                        {(analysisResult ? [analysisResult.toneHex, "#d4af37", "#141417"] : user.palette).map((col, idx) => (
+                          <div key={idx} className="flex-1 text-center">
+                            <div className="h-10 rounded-lg mb-1 border border-white/10" style={{ backgroundColor: col }} />
+                            <span className="text-[10px] font-mono text-stone-400">{col.toUpperCase()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <span className="text-xs uppercase tracking-wider text-stone-400">Curated Brands</span>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {["Saint Laurent", "Zegna", "Loro Piana", "Ami Paris", "Brunello Cucinelli"].map((brand, idx) => (
+                          <span key={idx} className="text-[10px] bg-stone-900 border border-white/5 px-2.5 py-1.5 rounded uppercase tracking-wider text-stone-300">
+                            {brand}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Outfit Recommendations Preview */}
+                <div>
+                  <div className="flex justify-between items-end mb-8">
+                    <div>
+                      <span className="text-xs uppercase text-gold font-bold tracking-widest">Curated Outfits</span>
+                      <h2 className="font-editorial text-2xl font-bold mt-1">RECOMMENDED CAPSULES</h2>
+                    </div>
+                    <button onClick={() => setPage("recommendations")} className="text-xs uppercase tracking-widest text-gold border-b border-gold hover:text-white hover:border-white transition pb-1">
+                      View Full Catalog
+                    </button>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {OUTFIT_RECOMMENDATIONS.casual.map((outfit) => (
+                      <div key={outfit.id} className="glass-panel p-6 rounded-2xl flex flex-col justify-between border border-white/5 hover:border-gold/30">
+                        <div>
+                          <div className="flex justify-between items-start mb-4">
+                            <div>
+                              <span className="text-[9px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-0.5 rounded">Casual</span>
+                              <h3 className="font-editorial text-lg font-bold text-white mt-1.5">{outfit.name}</h3>
+                            </div>
+                            <span className="text-xs text-gold-gradient font-bold">{outfit.price}</span>
+                          </div>
+                          <p className="text-xs text-stone-400 leading-relaxed mb-4">{outfit.description}</p>
+                          
+                          <div className="space-y-1 mb-6 text-xs text-stone-300">
+                            <div><strong>Top:</strong> {outfit.items.top}</div>
+                            <div><strong>Bottom:</strong> {outfit.items.bottom}</div>
+                            <div><strong>Shoes:</strong> {outfit.items.shoes}</div>
+                            <div><strong>Accessory:</strong> {outfit.items.accessory}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                          <button 
+                            onClick={() => {
+                              setTryOnConfig(prev => ({
+                                ...prev,
+                                hair: outfit.hair.toLowerCase().includes("quiff") ? "quiff" : "waves",
+                                jacket: outfit.name.toLowerCase().includes("suede") ? "trench" : "leather"
+                              }));
+                              setPage("tryon");
+                            }}
+                            className="btn-glass px-4 py-2 text-xs uppercase tracking-widest rounded flex items-center gap-1.5"
+                          >
+                            <Icon name="eye" className="w-3.5 h-3.5" />
+                            Virtual Try-On
+                          </button>
+                          <button 
+                            onClick={() => saveOutfit(outfit)}
+                            className="btn-gold px-4 py-2 text-xs uppercase tracking-widest rounded flex items-center gap-1.5"
+                          >
+                            <Icon name="bookmark" className="w-3.5 h-3.5" />
+                            Save Outfit
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 4. AI IMAGE UPLOAD SCANNER */}
+            {page === "upload" && (
+              <div className="max-w-3xl mx-auto px-6 py-12">
+                <div className="glass-panel p-10 rounded-3xl border border-white/5 text-center relative overflow-hidden">
+                  
+                  {/* Glowing gradient backdrops */}
+                  <div className="absolute top-0 left-0 w-24 h-24 bg-gold/10 rounded-full blur-2xl" />
+                  <div className="absolute bottom-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl" />
+                  
+                  <span className="text-xs uppercase text-gold font-bold tracking-widest">Silhouette Scan Suite</span>
+                  <h2 className="font-editorial text-2xl md:text-4xl mt-2 mb-4 font-bold text-white">UPLOAD PORTRAIT</h2>
+                  <p className="max-w-md mx-auto text-xs text-stone-400 mb-8">For highest styling accuracy, upload a front-facing headshot. Our algorithm will sample your hair length, facial features, and skin tone.</p>
+                  
+                  {/* Preferences selectors */}
+                  <div className="flex justify-center gap-4 mb-6">
+                    <button 
+                      onClick={() => setStylePref("male")} 
+                      className={`px-4 py-2 rounded text-xs uppercase tracking-widest border transition ${stylePref === "male" ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900"}`}
+                    >
+                      Masculine Focus
+                    </button>
+                    <button 
+                      onClick={() => setStylePref("female")} 
+                      className={`px-4 py-2 rounded text-xs uppercase tracking-widest border transition ${stylePref === "female" ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900"}`}
+                    >
+                      Feminine Focus
+                    </button>
+                    <button 
+                      onClick={() => setStylePref("unisex")} 
+                      className={`px-4 py-2 rounded text-xs uppercase tracking-widest border transition ${stylePref === "unisex" ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900"}`}
+                    >
+                      Unisex Focus
+                    </button>
+                  </div>
+
+                  {/* Drag-and-drop / Camera container */}
+                  <div 
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const file = e.dataTransfer.files[0];
+                      if (file && file.type.startsWith("image/")) {
+                        setUploadedFile(file);
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          setUploadedImage(event.target.result);
+                        };
+                        reader.readAsDataURL(file);
+                        addChatMessage("ai", "Silhouette photo received via drag-and-drop. Ready to analyze!");
+                      }
+                    }}
+                    className="border border-dashed border-white/15 rounded-2xl bg-black/40 p-8 flex flex-col items-center justify-center min-h-[300px] relative"
+                  >
+                    
+                    {scanning && (
+                      <div className="absolute inset-0 bg-black/80 z-20 flex flex-col items-center justify-center rounded-2xl">
+                        <div className="scanner-line" />
+                        <div className="w-16 h-16 rounded-full border border-gold/40 border-t-gold animate-spin mb-4" />
+                        <span className="font-editorial text-lg text-gold font-bold tracking-widest animate-pulse">NEURAL ENGINE PARSING SILHOUETTE</span>
+                        <span className="text-[10px] text-stone-400 uppercase tracking-widest mt-1">Sampling skin values, geometry matrices, tone curves...</span>
+                      </div>
+                    )}
+
+                    {uploadedImage ? (
+                      <div className="relative">
+                        <img 
+                          id="scanImageNode"
+                          src={uploadedImage} 
+                          className="max-h-[280px] rounded-xl object-contain border border-white/10" 
+                          alt="Silhouette portrait preview"
+                        />
+                        <button 
+                          onClick={() => {
+                            setUploadedImage(null);
+                            setUploadedFile(null);
+                          }} 
+                          className="absolute -top-3 -right-3 p-1.5 bg-black border border-white/20 rounded-full text-stone-400 hover:text-white shadow-lg"
+                        >
+                          <Icon name="x" className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ) : cameraMode ? (
+                      <div className="w-full relative h-[360px] rounded-xl overflow-hidden bg-black flex flex-col justify-between border border-white/10">
+                        
+                        {/* Shutter flash overlay */}
+                        {shutterFlash && (
+                          <div className="absolute inset-0 bg-white z-40 animate-pulse" />
+                        )}
+
+                        {/* DSLR Viewfinder overlay grids */}
+                        <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-25 z-10">
+                          <div className="border-r border-b border-white/20" />
+                          <div className="border-r border-b border-white/20" />
+                          <div className="border-b border-white/20" />
+                          <div className="border-r border-b border-white/20" />
+                          <div className="border-r border-b border-white/20" />
+                          <div className="border-b border-white/20" />
+                        </div>
+
+                        {/* DSLR Center Focus Ring */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                          <div className="w-32 h-32 border-2 border-dashed border-gold/50 rounded-full animate-pulse flex items-center justify-center">
+                            <div className="w-3.5 h-3.5 bg-gold rounded-full shadow-[0_0_12px_#d4af37]" />
+                          </div>
+                          <span className="absolute bottom-4 left-4 text-[9px] font-mono tracking-widest text-gold bg-black/60 px-2 py-0.5 rounded uppercase">
+                            {webcamActive ? "Webcam Autofocus Active" : "AF-L Focus Locked"}
+                          </span>
+                        </div>
+
+                        {/* Live Webcam Video or Simulated Preset Viewfinder */}
+                        {webcamActive ? (
+                          <video 
+                            ref={videoRef}
+                            autoPlay
+                            playsInline
+                            className="absolute inset-0 w-full h-full object-cover scale-x-[-1] filter brightness-[0.8] contrast-[1.05]"
+                          />
+                        ) : (
+                          <img 
+                            src={MODEL_PRESETS.find(m => m.id === cameraPresetModel)?.image || MODEL_PRESETS[0].image} 
+                            className="absolute inset-0 w-full h-full object-cover filter brightness-[0.8] contrast-[1.05]" 
+                            alt="Camera Viewfinder"
+                          />
+                        )}
+
+                        {/* Top bar: Mode details */}
+                        <div className="relative z-10 w-full bg-black/60 px-4 py-2.5 border-b border-white/5 flex justify-between items-center text-[10px] font-mono uppercase text-stone-400">
+                          <span className={`${webcamActive ? 'text-emerald font-bold' : 'text-gold font-bold'}`}>
+                            ● {webcamActive ? 'LIVE WEBCAM VIEW' : 'DSLR SIMULATION VIEW'}
+                          </span>
+                          <span>F2.8 • 1/125s • ISO 400</span>
+                        </div>
+
+                        {/* Bottom bar: Model selection & shutter */}
+                        <div className="relative z-10 w-full bg-black/85 p-4 border-t border-white/5 space-y-4">
+                          {webcamError && (
+                            <div className="text-[10px] text-red-400 font-mono text-center">
+                              ⚠️ {webcamError}
+                            </div>
+                          )}
+
+                          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                            <span className="text-[9px] uppercase tracking-wider text-stone-400 font-bold block">
+                              {webcamActive ? "Webcam Mode (or Choose Preset Model):" : "Frame Target Profile:"}
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {/* Switch webcam/sim buttons */}
+                              {webcamActive ? (
+                                <button
+                                  onClick={() => {
+                                    if (webcamStream) {
+                                      webcamStream.getTracks().forEach(track => track.stop());
+                                      setWebcamStream(null);
+                                    }
+                                    setWebcamActive(false);
+                                    addChatMessage("ai", "Switched to High-Fidelity Simulator view.");
+                                  }}
+                                  className="px-2 py-1 bg-stone-900 border border-white/10 hover:border-gold/30 text-stone-300 rounded text-[8px] uppercase tracking-widest font-semibold transition"
+                                >
+                                  Use Simulator
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={startWebcam}
+                                  className="px-2 py-1 bg-emerald-950 border border-emerald/30 hover:border-emerald text-emerald rounded text-[8px] uppercase tracking-widest font-semibold transition"
+                                >
+                                  Connect Webcam
+                                </button>
+                              )}
+
+                              {MODEL_PRESETS.map((m) => (
+                                <button
+                                  key={m.id}
+                                  onClick={() => {
+                                    if (webcamStream) {
+                                      webcamStream.getTracks().forEach(track => track.stop());
+                                      setWebcamStream(null);
+                                    }
+                                    setWebcamActive(false);
+                                    setCameraPresetModel(m.id);
+                                    addChatMessage("ai", `Camera focusing lens on target "${m.name}". Ready to snap.`);
+                                  }}
+                                  className={`px-2 py-1 rounded text-[8px] uppercase tracking-wider border transition ${!webcamActive && cameraPresetModel === m.id ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900"}`}
+                                >
+                                  {m.name.split(" ")[0]}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div className="flex justify-between items-center gap-4 border-t border-white/5 pt-3">
+                            <button 
+                              onClick={() => {
+                                stopWebcam();
+                                addChatMessage("ai", "Camera Atelier session closed.");
+                              }}
+                              className="px-4 py-2 bg-stone-900 border border-white/10 hover:border-white/20 text-stone-400 hover:text-white rounded text-[10px] uppercase tracking-widest font-bold transition"
+                            >
+                              Cancel
+                            </button>
+
+                            {/* Capture Snapshot Button */}
+                            <button 
+                              onClick={() => {
+                                setShutterFlash(true);
+                                // Play high-tech camera snapshot tone
+                                try {
+                                  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                                  const osc = audioCtx.createOscillator();
+                                  osc.type = "sine";
+                                  osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+                                  osc.connect(audioCtx.destination);
+                                  osc.start();
+                                  osc.stop(audioCtx.currentTime + 0.08);
+                                } catch (e) {}
+
+                                setTimeout(() => {
+                                  setShutterFlash(false);
+                                  if (webcamActive && videoRef.current) {
+                                    const video = videoRef.current;
+                                    const canvas = document.createElement("canvas");
+                                    canvas.width = video.videoWidth || 640;
+                                    canvas.height = video.videoHeight || 480;
+                                    const ctx = canvas.getContext("2d");
+                                    
+                                    // Flip horizontally for natural mirror image
+                                    ctx.translate(canvas.width, 0);
+                                    ctx.scale(-1, 1);
+                                    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                                    
+                                    const dataUrl = canvas.toDataURL("image/jpeg");
+                                    setUploadedImage(dataUrl);
+                                    setUploadedFile(null);
+                                    stopWebcam();
+                                    addChatMessage("ai", "Snapshot captured from webcam successfully! Review your portrait below, then click 'Initiate Intelligent Analyzer'.");
+                                  } else {
+                                    const selectedImg = MODEL_PRESETS.find(m => m.id === cameraPresetModel)?.image;
+                                    setUploadedImage(selectedImg);
+                                    setUploadedFile(null);
+                                    stopWebcam();
+                                    addChatMessage("ai", `Simulator snapshot captured successfully! Review your portrait preview below, then click "Initiate Intelligent Analyzer" to run custom neural matching.`);
+                                  }
+                                }, 300);
+                              }}
+                              className="btn-gold px-5 py-2.5 rounded text-[10px] uppercase tracking-widest font-bold flex items-center gap-1.5 shadow-[0_0_15px_rgba(212,175,55,0.35)] animate-pulse"
+                            >
+                              <Icon name="camera" className="w-3.5 h-3.5" />
+                              CAPTURE PORTRAIT
+                            </button>
+                          </div>
+                        </div>
+
+                      </div>
+                    ) : (
+                      <>
+                        <Icon name="upload-cloud" className="w-12 h-12 text-stone-500 mb-4" />
+                        <span className="text-xs uppercase tracking-widest font-semibold text-stone-300">Drag & Drop Silhouette Portrait</span>
+                        <span className="text-[10px] text-stone-500 mt-1 mb-4">Supports PNG, JPG up to 10MB</span>
+                        
+                        <div className="flex gap-4">
+                          <label className="btn-gold px-4 py-2.5 text-xs uppercase tracking-widest rounded cursor-pointer">
+                            Browse Portrait
+                            <input 
+                              type="file" 
+                              accept="image/*"
+                              className="hidden" 
+                              onChange={(e) => {
+                                const file = e.target.files[0];
+                                if (file) {
+                                  setUploadedFile(file);
+                                  const reader = new FileReader();
+                                  reader.onload = (event) => {
+                                    setUploadedImage(event.target.result);
+                                  };
+                                  reader.readAsDataURL(file);
+                                }
+                              }}
+                            />
+                          </label>
+                          <button 
+                            onClick={startWebcam} 
+                            className="btn-glass px-4 py-2.5 text-xs uppercase tracking-widest rounded flex items-center gap-1.5 transition"
+                          >
+                            <Icon name="camera" className="w-3.5 h-3.5" />
+                            Use Camera / Webcam
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {uploadedImage && (
+                    <button 
+                      onClick={() => {
+                        const img = document.getElementById("scanImageNode");
+                        handleImageScan(uploadedImage, img);
+                      }} 
+                      className="mt-8 btn-gold px-8 py-3.5 text-xs uppercase tracking-widest rounded-lg w-full flex items-center justify-center gap-2"
+                    >
+                      <Icon name="cpu" className="w-4 h-4" />
+                      Initiate Intelligent Analyzer
+                    </button>
+                  )}
+
+                  {/* Model Presets Quick Select */}
+                  <div className="mt-8 border-t border-white/5 pt-6 text-left">
+                    <span className="block text-[10px] uppercase text-stone-400 tracking-widest mb-3">Or choose a pre-made model to test immediately:</span>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {MODEL_PRESETS.map((m) => (
+                        <div 
+                          key={m.id} 
+                          onClick={() => {
+                            setUploadedImage(m.image);
+                            setTryOnConfig(prev => ({
+                              ...prev,
+                              modelId: m.id
+                            }));
+                            addChatMessage("ai", `Selected demo model "${m.name}". Ready for analysis.`);
+                          }}
+                          className="cursor-pointer border border-white/5 rounded-lg p-2 bg-stone-900/60 hover:border-gold/30 transition flex items-center gap-2.5"
+                        >
+                          <img src={m.image} className="w-8 h-8 rounded-full object-cover border border-white/10" alt={m.name} />
+                          <div className="truncate">
+                            <span className="block text-[10px] font-semibold truncate text-white">{m.name}</span>
+                            <span className="block text-[8px] uppercase tracking-wider text-stone-400">{m.faceShape}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
+
+            {/* 5. AI OUTFIT RECOMMENDATIONS */}
+            {page === "recommendations" && (
+              <div className="max-w-7xl mx-auto px-6 py-12">
+                
+                {/* Intro Heading */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
+                  <div>
+                    <span className="text-xs uppercase text-gold font-bold tracking-widest font-sans">Neural Wardrobe Recommendations</span>
+                    <h2 className="font-editorial text-3xl md:text-5xl mt-2 font-bold text-white">THE BESPOKE CAPSULES</h2>
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    <button 
+                      onClick={() => setLuxuryFilter("luxury")} 
+                      className={`px-3 py-1.5 rounded text-[10px] uppercase tracking-wider border transition ${luxuryFilter === "luxury" ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900"}`}
+                    >
+                      Luxury Fashion Mode
+                    </button>
+                    <button 
+                      onClick={() => setLuxuryFilter("budget")} 
+                      className={`px-3 py-1.5 rounded text-[10px] uppercase tracking-wider border transition ${luxuryFilter === "budget" ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900"}`}
+                    >
+                      Budget Mode
+                    </button>
+                  </div>
+                </div>
+
+                {/* Outfit Categories Grid */}
+                <div className="space-y-16">
+                  {Object.keys(OUTFIT_RECOMMENDATIONS).map((catName) => (
+                    <div key={catName} className="border-t border-white/5 pt-10">
+                      
+                      {/* Category Header */}
+                      <div className="mb-6 flex justify-between items-center">
+                        <h3 className="font-editorial text-xl font-bold uppercase tracking-widest text-gold-gradient">
+                          {catName.toUpperCase()} COLLECTIONS
+                        </h3>
+                        <span className="text-[10px] text-stone-500 uppercase tracking-widest">
+                          {OUTFIT_RECOMMENDATIONS[catName].length} Curated Options
+                        </span>
+                      </div>
+
+                      {/* Outfit Cards */}
+                      <div className="grid md:grid-cols-2 gap-8">
+                        {OUTFIT_RECOMMENDATIONS[catName].map((outfit) => (
+                          <div key={outfit.id} className="glass-panel p-6 rounded-2xl flex flex-col justify-between border border-white/5 hover:border-gold/30">
+                            <div>
+                              <div className="flex justify-between items-start mb-4">
+                                <div>
+                                  <span className="text-[9px] uppercase tracking-widest bg-gold/10 text-gold px-2 py-0.5 rounded">{outfit.style}</span>
+                                  <h3 className="font-editorial text-lg font-bold text-white mt-1.5">{outfit.name}</h3>
+                                </div>
+                                <span className="text-sm text-gold-gradient font-bold">
+                                  {luxuryFilter === "budget" ? `$${Math.round(parseInt(outfit.price.replace(/[$,]/g, '')) * 0.15)}` : outfit.price}
+                                </span>
+                              </div>
+                              <p className="text-xs text-stone-400 leading-relaxed mb-4">{outfit.description}</p>
+                              
+                              <div className="space-y-1.5 mb-6 text-xs text-stone-300 border-l border-white/10 pl-3">
+                                <div><strong>Top:</strong> {luxuryFilter === "budget" ? outfit.items.top.replace(/\$\d+/, "$18") : outfit.items.top}</div>
+                                <div><strong>Bottom:</strong> {luxuryFilter === "budget" ? outfit.items.bottom.replace(/\$\d+/, "$32") : outfit.items.bottom}</div>
+                                <div><strong>Shoes:</strong> {luxuryFilter === "budget" ? outfit.items.shoes.replace(/\$\d+/, "$45") : outfit.items.shoes}</div>
+                                <div><strong>Accessory:</strong> {luxuryFilter === "budget" ? outfit.items.accessory.replace(/\$\d+/, "$12") : outfit.items.accessory}</div>
+                              </div>
+
+                              <div className="flex items-center gap-2 mb-4">
+                                <span className="text-[10px] text-stone-400 uppercase tracking-widest">Outfit Hue Palette:</span>
+                                <div className="flex gap-1.5">
+                                  {outfit.colors.map((c, idx) => (
+                                    <span key={idx} className="w-3.5 h-3.5 rounded-full border border-white/10" style={{ backgroundColor: c }} />
+                                  ))}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                              <button 
+                                onClick={() => {
+                                  // Update Try-On state based on outfit attributes
+                                  setTryOnConfig(prev => ({
+                                    ...prev,
+                                    hair: outfit.hair.toLowerCase().includes("quiff") ? "quiff" : "waves",
+                                    jacket: outfit.name.toLowerCase().includes("suede") ? "trench" : "leather"
+                                  }));
+                                  setPage("tryon");
+                                  addChatMessage("ai", `Transferred outfit parameters of "${outfit.name}" to the virtual dressing room sandbox. Select overlays to try them live!`);
+                                }}
+                                className="btn-glass px-4 py-2.5 text-xs uppercase tracking-widest rounded flex items-center gap-1.5"
+                              >
+                                <Icon name="eye" className="w-3.5 h-3.5" />
+                                Try On Silhouette
+                              </button>
+                              <button 
+                                onClick={() => saveOutfit(outfit)}
+                                className="btn-gold px-4 py-2.5 text-xs uppercase tracking-widest rounded flex items-center gap-1.5"
+                              >
+                                <Icon name="bookmark" className="w-3.5 h-3.5" />
+                                Add to Favorites
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                    </div>
+                  ))}
+                </div>
+
+              </div>
+            )}
+
+            {/* 6. VIRTUAL TRY-ON SANDBOX */}
+            {page === "tryon" && (
+              <div className="max-w-7xl mx-auto px-6 py-12">
+                
+                {/* Heading */}
+                <div className="mb-12">
+                  <span className="text-xs uppercase text-gold font-bold tracking-widest font-sans">High-Fidelity Virtual Dressing Room</span>
+                  <h2 className="font-editorial text-3xl md:text-5xl mt-2 font-bold text-white">VIRTUAL TRY-ON</h2>
+                  <p className="text-xs text-stone-400 mt-1">Overlay hairstyles, premium accessories, and luxury layering coats on your portrait. Use the slider to see raw vs curated comparisons.</p>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-12 items-start">
+                  
+                  {/* Left Side: Try On Preview Canvas Container */}
+                  <div className="glass-panel p-6 rounded-2xl relative shadow-2xl overflow-hidden border border-white/5">
+                    
+                    {/* Before/After Drag Slider Container */}
+                    <div 
+                      id="tryonSandboxContainer"
+                      className="comparison-slider-container w-full h-[520px] rounded-xl relative overflow-hidden bg-black/60"
+                      onMouseMove={(e) => {
+                        const bounds = e.currentTarget.getBoundingClientRect();
+                        const x = e.clientX - bounds.left;
+                        const percentage = Math.max(0, Math.min(100, (x / bounds.width) * 100));
+setTryOnConfig(prev => ({ ...prev, sliderPosition: percentage }));
+                      }}
+                    >
+                      {/* RIGHT SIDE: Dynamic Overlays Layer */}
+                      <div className="absolute inset-0">
+                        {/* Base Photo Image */}
+                        <img 
+                          src={tryOnConfig.modelId === "custom_upload" && uploadedImage 
+                            ? uploadedImage 
+                            : (MODEL_PRESETS.find(m => m.id === tryOnConfig.modelId)?.image || MODEL_PRESETS[1].image)} 
+                          className="w-full h-full object-cover filter brightness-[0.95]" 
+                          alt="Try on Model"
+                        />
+
+                        {/* Layer 1: Custom Hairstyles (Stylized glowing overlays or premium mock graphics) */}
+                        {tryOnConfig.hair !== "none" && (
+                          <div className="absolute top-[8%] left-[25%] w-[50%] h-[25%] pointer-events-none z-30 filter drop-shadow-[0_4px_10px_rgba(0,0,0,0.5)]">
+                            {tryOnConfig.hair === "quiff" ? (
+                              <svg viewBox="0 0 100 60" fill="#2b1810" className="w-full h-full">
+                                <path d="M10 50 C20 15, 80 15, 90 50 C80 35, 20 35, 10 50 Z" />
+                                <path d="M15 38 C30 5, 70 5, 85 38 C75 25, 25 25, 15 38 Z" fill="#d4af37" opacity="0.15" />
+                              </svg>
+                            ) : tryOnConfig.hair === "bob" ? (
+                              <svg viewBox="0 0 100 70" fill="#111" className="w-full h-full">
+                                <path d="M15 10 C35 5, 65 5, 85 10 C95 30, 95 65, 85 70 C80 50, 20 50, 15 70 C5 65, 5 30, 15 10 Z" />
+                              </svg>
+                            ) : tryOnConfig.hair === "waves" ? (
+                              <svg viewBox="0 0 100 80" fill="#4a2511" className="w-full h-full">
+                                <path d="M20 5 C50 0, 50 0, 80 5 C95 30, 90 75, 85 80 C70 60, 30 60, 15 80 C10 75, 5 30, 20 5 Z" />
+                                <path d="M10 30 C30 40, 70 40, 90 30" stroke="#f3e5ab" strokeWidth="2" fill="none" opacity="0.3" />
+                              </svg>
+                            ) : tryOnConfig.hair === "buzzcut" ? (
+                              <svg viewBox="0 0 100 50" fill="#1c1917" className="w-full h-full" opacity="0.8">
+                                <path d="M12 48 C20 10, 80 10, 88 48 C75 40, 25 40, 12 48 Z" />
+                              </svg>
+                            ) : null}
+                          </div>
+                        )}
+
+                        {/* Layer 2: Designer Eyewear Glasses */}
+                        {tryOnConfig.glass !== "none" && (
+                          <div className="absolute top-[28%] left-[30%] w-[40%] h-[12%] pointer-events-none z-30">
+                            {tryOnConfig.glass === "aviator" ? (
+                              <svg viewBox="0 0 100 30" className="w-full h-full">
+                                {/* Left Glass lens */}
+                                <rect x="5" y="5" width="38" height="22" rx="10" fill="rgba(212, 175, 55, 0.4)" stroke="#d4af37" strokeWidth="2" />
+                                {/* Right Glass lens */}
+                                <rect x="57" y="5" width="38" height="22" rx="10" fill="rgba(212, 175, 55, 0.4)" stroke="#d4af37" strokeWidth="2" />
+                                {/* Center bridge */}
+                                <line x1="43" y1="12" x2="57" y2="12" stroke="#d4af37" strokeWidth="3" />
+                                <line x1="43" y1="7" x2="57" y2="7" stroke="#d4af37" strokeWidth="1.5" />
+                              </svg>
+                            ) : tryOnConfig.glass === "hex" ? (
+                              <svg viewBox="0 0 100 30" className="w-full h-full">
+                                {/* Left Hex lens */}
+                                <polygon points="5,15 15,5 33,5 43,15 33,25 15,25" fill="rgba(0,0,0,0.6)" stroke="#f3e5ab" strokeWidth="2" />
+                                {/* Right Hex lens */}
+                                <polygon points="57,15 67,5 85,5 95,15 85,25 67,25" fill="rgba(0,0,0,0.6)" stroke="#f3e5ab" strokeWidth="2" />
+                                {/* Center bridge */}
+                                <line x1="43" y1="12" x2="57" y2="12" stroke="#f3e5ab" strokeWidth="3" />
+                              </svg>
+                            ) : tryOnConfig.glass === "retro" ? (
+                              <svg viewBox="0 0 100 30" className="w-full h-full">
+                                {/* Left Retro */}
+                                <rect x="5" y="5" width="38" height="22" rx="4" fill="rgba(139, 92, 246, 0.3)" stroke="#8b5cf6" strokeWidth="3" />
+                                {/* Right Retro */}
+                                <rect x="57" y="5" width="38" height="22" rx="4" fill="rgba(139, 92, 246, 0.3)" stroke="#8b5cf6" strokeWidth="3" />
+                                {/* Center bridge */}
+                                <line x1="43" y1="12" x2="57" y2="12" stroke="#8b5cf6" strokeWidth="4" />
+                              </svg>
+                            ) : null}
+                          </div>
+                        )}
+
+                        {/* Layer 3: Outerwear Jackets */}
+                        {tryOnConfig.jacket !== "none" && (
+                          <div className="absolute top-[55%] left-[5%] w-[90%] h-[45%] pointer-events-none z-30 filter drop-shadow-[0_-5px_15px_rgba(0,0,0,0.6)]">
+                            {tryOnConfig.jacket === "leather" ? (
+                              <svg viewBox="0 0 200 100" fill="#141417" className="w-full h-full">
+                                <path d="M10 100 L40 15 L70 35 L100 12 L130 35 L160 15 L190 100 Z" />
+                                {/* Silver zippers */}
+                                <line x1="85" y1="40" x2="65" y2="90" stroke="#94a3b8" strokeWidth="2" />
+                                <line x1="115" y1="40" x2="135" y2="90" stroke="#94a3b8" strokeWidth="2" />
+                                {/* Gold buttons */}
+                                <circle cx="43" cy="22" r="3" fill="#d4af37" />
+                                <circle cx="157" cy="22" r="3" fill="#d4af37" />
+                              </svg>
+                            ) : tryOnConfig.jacket === "trench" ? (
+                              <svg viewBox="0 0 200 100" fill="#c6a67c" className="w-full h-full">
+                                <path d="M15 100 L45 20 L80 35 L100 25 L120 35 L155 20 L185 100 Z" />
+                                <path d="M85 35 L100 100 M115 35 L100 100" stroke="#5c4d3c" strokeWidth="1" />
+                                {/* Tortoise buttons */}
+                                <circle cx="75" cy="50" r="3.5" fill="#3b2f21" />
+                                <circle cx="75" cy="70" r="3.5" fill="#3b2f21" />
+                                <circle cx="125" cy="50" r="3.5" fill="#3b2f21" />
+                                <circle cx="125" cy="70" r="3.5" fill="#3b2f21" />
+                              </svg>
+                            ) : tryOnConfig.jacket === "bomber" ? (
+                              <svg viewBox="0 0 200 100" fill="#064e3b" className="w-full h-full">
+                                <path d="M20 100 C30 40, 50 25, 75 30 L100 18 L125 30 C150 25, 170 40, 180 100 Z" />
+                                {/* Ribbed collar */}
+                                <path d="M75 30 C85 24, 115 24, 125 30" stroke="#042f22" strokeWidth="4" fill="none" />
+                              </svg>
+                            ) : null}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* LEFT SIDE: Before Photo Layer (Slices width via clipPath) */}
+                      <div 
+                        className="absolute inset-0 z-10 pointer-events-none transition-all duration-75"
+                        style={{ clipPath: `polygon(0 0, ${tryOnConfig.sliderPosition}% 0, ${tryOnConfig.sliderPosition}% 100%, 0 100%)` }}
+                      >
+                        <img 
+                          src={tryOnConfig.modelId === "custom_upload" && uploadedImage 
+                            ? uploadedImage 
+                            : (MODEL_PRESETS.find(m => m.id === tryOnConfig.modelId)?.image || MODEL_PRESETS[1].image)} 
+                          className="w-full h-full object-cover filter brightness-[0.7]" 
+                          alt="Try on Raw Model"
+                        />
+                      </div>
+
+                      {/* Drag Handles */}
+                      <div 
+                        className="before-after-divider"
+                        style={{ left: `${tryOnConfig.sliderPosition}%` }}
+                      />
+                      <div 
+                        className="before-after-handle"
+                        style={{ left: `${tryOnConfig.sliderPosition}%` }}
+                      >
+                        <Icon name="move-horizontal" className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Options Overlay Controls */}
+                  <div className="space-y-8">
+                    
+                    {/* Model preset selector */}
+                    <div className="glass-panel p-6 rounded-2xl border border-white/5">
+                      <label className="block text-xs uppercase tracking-widest text-gold font-bold mb-3">1. Select Silhouette Canvas Model</label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {/* Custom upload option */}
+                        {uploadedImage && (
+                          <button
+                            onClick={() => setTryOnConfig(prev => ({ ...prev, modelId: "custom_upload" }))}
+                            className={`p-2.5 rounded-lg border text-left flex items-center gap-2.5 transition ${tryOnConfig.modelId === "custom_upload" ? "border-gold bg-gold/5 text-white" : "border-white/5 bg-stone-900/60 text-stone-400 hover:border-white/10"}`}
+                          >
+                            <img src={uploadedImage} className="w-8 h-8 rounded-full object-cover border border-white/15" alt="My Portrait" />
+                            <div className="truncate">
+                              <span className="block text-[10px] font-semibold truncate text-white">My Scanned Photo</span>
+                              <span className="block text-[8px] uppercase tracking-wider text-stone-400">Custom Silhouette</span>
+                            </div>
+                          </button>
+                        )}
+                        
+                        {MODEL_PRESETS.map((m) => (
+                          <button
+                            key={m.id}
+                            onClick={() => setTryOnConfig(prev => ({ ...prev, modelId: m.id }))}
+                            className={`p-2.5 rounded-lg border text-left flex items-center gap-2.5 transition ${tryOnConfig.modelId === m.id ? "border-gold bg-gold/5 text-white" : "border-white/5 bg-stone-900/60 text-stone-400 hover:border-white/10"}`}
+                          >
+                            <img src={m.image} className="w-8 h-8 rounded-full object-cover border border-white/15" alt={m.name} />
+                            <div className="truncate">
+                              <span className="block text-[10px] font-semibold truncate text-white">{m.name}</span>
+                              <span className="block text-[8px] uppercase tracking-wider text-stone-400">{m.skinTone}</span>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Hairstyles panel */}
+                    <div className="glass-panel p-6 rounded-2xl border border-white/5">
+                      <label className="block text-xs uppercase tracking-widest text-gold font-bold mb-3">2. Curated Hairstyle Overlays</label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {[
+                          { id: "none", label: "Original" },
+                          { id: "quiff", label: "Textured Quiff" },
+                          { id: "bob", label: "French Bob" },
+                          { id: "waves", label: "Long Waves" },
+                          { id: "buzzcut", label: "Taper Buzzcut" }
+                        ].map((h) => (
+                          <button
+                            key={h.id}
+                            onClick={() => {
+                              setTryOnConfig(prev => ({ ...prev, hair: h.id }));
+                              addChatMessage("ai", `Applied the "${h.label}" hairstyle overlay to your portrait. Try sliding the before/after handle to see the structured change.`);
+                            }}
+                            className={`px-4 py-2 rounded text-xs uppercase tracking-wider border transition ${tryOnConfig.hair === h.id ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900/60 hover:border-white/10"}`}
+                          >
+                            {h.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Designer Glasses Accessories panel */}
+                    <div className="glass-panel p-6 rounded-2xl border border-white/5">
+                      <label className="block text-xs uppercase tracking-widest text-gold font-bold mb-3">3. Designer Eyewear Suite</label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {[
+                          { id: "none", label: "Original" },
+                          { id: "aviator", label: "Gold Aviators" },
+                          { id: "hex", label: "Hexagonal Metal" },
+                          { id: "retro", label: "Tortoise Retro" }
+                        ].map((g) => (
+                          <button
+                            key={g.id}
+                            onClick={() => {
+                              setTryOnConfig(prev => ({ ...prev, glass: g.id }));
+                              addChatMessage("ai", `Equipped custom "${g.label}" designer sunglasses. Real-time lens refraction simulates luxury brand specifications.`);
+                            }}
+                            className={`px-4 py-2 rounded text-xs uppercase tracking-wider border transition ${tryOnConfig.glass === g.id ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900/60 hover:border-white/10"}`}
+                          >
+                            {g.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Outerwear Jackets panel */}
+                    <div className="glass-panel p-6 rounded-2xl border border-white/5">
+                      <label className="block text-xs uppercase tracking-widest text-gold font-bold mb-3">4. Luxury Layering Coats</label>
+                      <div className="flex flex-wrap gap-2.5">
+                        {[
+                          { id: "none", label: "Original" },
+                          { id: "leather", label: "Obsidian Leather Jacket" },
+                          { id: "trench", label: "Beige Trenchcoat" },
+                          { id: "bomber", label: "Emerald Bomber" }
+                        ].map((j) => (
+                          <button
+                            key={j.id}
+                            onClick={() => {
+                              setTryOnConfig(prev => ({ ...prev, jacket: j.id }));
+                              addChatMessage("ai", `Fitted the custom "${j.label}". Notice the tailored collar alignment and custom HSL fabric shading.`);
+                            }}
+                            className={`px-4 py-2 rounded text-xs uppercase tracking-wider border transition ${tryOnConfig.jacket === j.id ? "border-gold text-gold bg-gold/5" : "border-white/5 text-stone-400 bg-stone-900/60 hover:border-white/10"}`}
+                          >
+                            {j.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+            )}
+
+            {/* 7. SAVED STYLES FAVORITES */}
+            {page === "saved" && (
+              <div className="max-w-7xl mx-auto px-6 py-12">
+                
+                {/* Heading */}
+                <div className="mb-12">
+                  <span className="text-xs uppercase text-gold font-bold tracking-widest font-sans">Your Private Wardrobe Vault</span>
+                  <h2 className="font-editorial text-3xl md:text-5xl mt-2 font-bold text-white">SAVED STYLES</h2>
+                  <p className="text-xs text-stone-400 mt-1">Review saved outfits and download custom magazine-style Style Cards for easy shopping references.</p>
+                </div>
+
+                {savedOutfits.length === 0 ? (
+                  <div className="glass-panel p-16 rounded-3xl text-center max-w-md mx-auto border border-white/5">
+                    <Icon name="bookmark" className="w-12 h-12 text-stone-600 mb-4" />
+                    <h3 className="font-editorial text-lg font-bold text-white">VAULT IS EMPTY</h3>
+                    <p className="text-xs text-stone-400 mt-2 mb-6">Browse our bespoke recommendation capsules and hit the bookmark button to save.</p>
+                    <button onClick={() => setPage("recommendations")} className="btn-gold px-6 py-3 text-xs uppercase tracking-widest rounded">
+                      Explore Outfits
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 gap-8">
+                    {savedOutfits.map((outfit) => (
+                      <div 
+                        key={outfit.id} 
+                        id={`outfitCard-${outfit.id}`}
+                        className="glass-panel p-8 rounded-2xl flex flex-col justify-between border border-white/10 hover:border-gold/30 bg-stone-950/80 shadow-2xl relative"
+                      >
+                        {/* Download Header banner inside the Card */}
+                        <div className="border-b border-white/10 pb-4 mb-4 flex justify-between items-center">
+                          <div>
+                            <span className="text-[10px] text-gold uppercase tracking-[0.2em] font-bold font-editorial">STYLEAI EDITORIAL</span>
+                            <span className="block text-[8px] text-stone-400 uppercase tracking-widest">ID: {outfit.id.toUpperCase()}</span>
+                          </div>
+                          <button 
+                            onClick={() => removeOutfit(outfit.id)}
+                            className="p-1.5 rounded-full hover:bg-stone-900 text-stone-500 hover:text-red-400 transition"
+                            title="Remove"
+                          >
+                            <Icon name="trash-2" className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        <div>
+                          <h3 className="font-editorial text-2xl font-bold text-white">{outfit.name.toUpperCase()}</h3>
+                          <p className="text-[10px] text-stone-400 font-editorial tracking-widest uppercase mb-4">{outfit.style}</p>
+                          
+                          <div className="space-y-2.5 text-xs text-stone-300 border-l-2 border-gold pl-3 py-1 mb-6">
+                            <div><strong>Top:</strong> {outfit.items.top}</div>
+                            <div><strong>Bottom:</strong> {outfit.items.bottom}</div>
+                            <div><strong>Footwear:</strong> {outfit.items.shoes}</div>
+                            <div><strong>Accents:</strong> {outfit.items.accessory}</div>
+                          </div>
+
+                          <div className="flex items-center gap-3 mb-6">
+                            <span className="text-[9px] uppercase tracking-widest text-stone-400">Color DNA:</span>
+                            <div className="flex gap-1.5">
+                              {outfit.colors.map((c, i) => (
+                                <span key={i} className="w-4 h-4 rounded-full border border-white/20" style={{ backgroundColor: c }} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Interactive Buttons */}
+                        <div className="flex items-center justify-between border-t border-white/5 pt-4">
+                          <button 
+                            onClick={() => {
+                              // Trigger canvas generation and download!
+                              const element = document.getElementById(`outfitCard-${outfit.id}`);
+                              window.html2canvas(element, { backgroundColor: '#0b0b0d' }).then((canvas) => {
+                                const link = document.createElement("a");
+                                link.download = `StyleAI-Card-${outfit.name.replace(/\s+/g, '-')}.png`;
+                                link.href = canvas.toDataURL("image/png");
+                                link.click();
+                                addChatMessage("ai", `Successfully downloaded your customized "${outfit.name}" editorial Style Card.`);
+                              });
+                            }}
+                            className="btn-gold px-4 py-2.5 text-xs uppercase tracking-widest rounded flex items-center gap-1.5"
+                          >
+                            <Icon name="download" className="w-3.5 h-3.5" />
+                            Download Style Card
+                          </button>
+
+                          <button 
+                            onClick={() => {
+                              // Simulate Social Share
+                              alert(`Link copied! Share this outfit card to your socials: ${window.location.href}#outfit=${outfit.id}`);
+                            }}
+                            className="btn-glass px-4 py-2.5 text-xs uppercase tracking-widest rounded flex items-center gap-1.5"
+                          >
+                            <Icon name="share-2" className="w-3.5 h-3.5" />
+                            Share Style
+                          </button>
+                        </div>
+
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+              </div>
+            )}
+
+            {/* 8. SETTINGS PAGE */}
+            {page === "settings" && (
+              <div className="max-w-3xl mx-auto px-6 py-12">
+                <div className="glass-panel p-8 rounded-3xl border border-white/5">
+                  <h2 className="font-editorial text-2xl font-bold mb-6 text-gold-gradient">ATELIER CONFIGURATION</h2>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-xs uppercase text-stone-300 tracking-widest font-bold mb-2">Simulated Services Configuration</h3>
+                      <p className="text-[10px] text-stone-400 leading-relaxed mb-4">StyleAI comes preloaded with high-fidelity mock databases, pixel analyzers, and conversational agents. Enter your custom OpenAI API Keys or Firebase connections if you want to bypass the simulation ecosystem.</p>
+                      
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-stone-400 mb-1">OpenAI API Access Key</label>
+                          <input 
+                            type="password" 
+                            placeholder="sk-proj-••••••••••••••••••••••••"
+                            className="w-full bg-stone-900 border border-white/5 rounded-lg px-4 py-3 text-xs text-white focus:border-gold/40 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-stone-400 mb-1">Firebase Project credentials</label>
+                          <input 
+                            type="text" 
+                            placeholder="styleai-prod-db8a2.firebaseapp.com"
+                            className="w-full bg-stone-900 border border-white/5 rounded-lg px-4 py-3 text-xs text-white focus:border-gold/40 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-6 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-xs uppercase tracking-widest text-stone-300 font-semibold">User Silhouette Data</h4>
+                        <span className="text-[10px] text-stone-500">Purge local browser cache database.</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          localStorage.clear();
+                          setSavedOutfits([]);
+                          setAnalysisResult(null);
+                          alert("Atelier database has been reset successfully.");
+                        }}
+                        className="px-4 py-2 border border-red-500/25 hover:border-red-500/50 text-red-400 text-[10px] uppercase tracking-widest rounded bg-red-500/5 transition"
+                      >
+                        Reset App Cache
+                      </button>
+                    </div>
+
+                    <div className="border-t border-white/5 pt-6 flex justify-between items-center">
+                      <div>
+                        <h4 className="text-xs uppercase tracking-widest text-stone-300 font-semibold">Sign Out</h4>
+                        <span className="text-[10px] text-stone-500">Disconnect Alexander session.</span>
+                      </div>
+                      <button 
+                        onClick={() => {
+                          setUser(null);
+                          setPage("landing");
+                          addChatMessage("ai", "Session disconnected. Log in anytime to access saved wardrobes.");
+                        }}
+                        className="btn-glass px-4 py-2 text-[10px] uppercase tracking-widest rounded"
+                      >
+                        Disconnect Session
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </main>
+
+          {/* DUAL CHATBOT INTERACTIVE SIDE DRAWER */}
+          {chatbotOpen && (
+            <div className="fixed bottom-6 right-6 z-50 w-full max-w-sm glass-panel-gold rounded-2xl shadow-2xl flex flex-col h-[500px] border border-gold/40 overflow-hidden float-animation">
+              
+              {/* Chatbot Header */}
+              <div className="bg-coal px-4 py-3.5 flex items-center justify-between border-b border-white/10">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-gold to-amber-100 flex items-center justify-center text-black font-bold text-xs">
+                    A
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold text-white">Aria — AI Stylist</h4>
+                    <span className="block text-[8px] text-stone-400 uppercase tracking-widest">Active Consultant</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {/* Voice assistant toggle */}
+                  <button 
+                    onClick={() => {
+                      setVoiceOn(!voiceOn);
+                      addChatMessage("ai", !voiceOn ? "Voice synthesis activated. I will now read out my luxury recommendations." : "Voice synthesis deactivated.");
+                    }}
+                    className={`p-1.5 rounded-full border transition ${voiceOn ? "border-gold bg-gold/10 text-gold" : "border-white/10 text-stone-400"}`}
+                    title={voiceOn ? "Voice Activated" : "Activate Speech Synthesis"}
+                  >
+                    <Icon name="volume-2" className="w-3.5 h-3.5" />
+                  </button>
+
+                  <button 
+                    onClick={() => setChatbotOpen(false)}
+                    className="p-1 rounded text-stone-400 hover:text-white"
+                  >
+                    <Icon name="x" className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Chat Messages */}
+              <div className="flex-grow p-4 overflow-y-auto space-y-3 bg-obsidian/90">
+                {chatMessages.map((msg, idx) => (
+                  <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed ${msg.sender === 'user' ? 'bg-gold text-black font-medium' : 'bg-stone-900 border border-white/5 text-stone-300'}`}>
+                      {msg.text}
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Voice waves visualizer if speech is playing */}
+                {voiceOn && (
+                  <div className="flex justify-start pt-2">
+                    <div className="bg-stone-900/40 border border-white/5 rounded-full px-3 py-1 flex items-center gap-2">
+                      <span className="text-[8px] text-gold uppercase tracking-widest font-mono">Synthesizing:</span>
+                      <div className="voice-wave-container">
+                        <div className="voice-wave-bar" />
+                        <div className="voice-wave-bar" />
+                        <div className="voice-wave-bar" />
+                        <div className="voice-wave-bar" />
+                        <div className="voice-wave-bar" />
+                        <div className="voice-wave-bar" />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Chat Input */}
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const inp = e.target.elements.chatInput;
+                  handleChatSubmit(inp.value);
+                  inp.value = "";
+                }}
+                className="bg-coal p-3 border-t border-white/10 flex gap-2"
+              >
+                <input 
+                  name="chatInput"
+                  required
+                  placeholder="Ask Aria: 'formal', 'casual', 'trends'..."
+                  className="flex-grow bg-stone-900 border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-gold/40"
+                />
+                <button type="submit" className="btn-gold p-2 rounded-lg text-black">
+                  <Icon name="send" className="w-3.5 h-3.5" />
+                </button>
+              </form>
+
+            </div>
+          )}
+
+          {/* FOOTER */}
+          <footer className="bg-obsidian border-t border-white/5 py-10 mt-16 text-center text-xs text-stone-500">
+            <div className="max-w-7xl mx-auto px-6">
+              <span className="font-editorial text-lg tracking-widest text-gold mb-2 block">STYLEAI ATELIER</span>
+              <p className="max-w-md mx-auto text-[10px] leading-relaxed mb-6">Inspired by Milanese tailoring and cutting-edge deep learning. StyleAI provides customized digital wardrobing matching true physical skin palettes.</p>
+              <div className="flex justify-center gap-6 text-[10px] uppercase tracking-widest text-stone-400 mb-6">
+                <span>Milano</span>
+                <span>•</span>
+                <span>Paris</span>
+                <span>•</span>
+                <span>Tokyo</span>
+                <span>•</span>
+                <span>New York</span>
+              </div>
+              <p className="text-[9px] text-stone-600">© 2026 StyleAI Atelier Corp. All rights reserved. Powered by Generative Deep Learning.</p>
+            </div>
+          </footer>
+
+        </div>
+      );
+    }
+
+    // Mount to root DOM node
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
